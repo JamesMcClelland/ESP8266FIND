@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+    <meta charset='UTF-8'>
+    <title>Find Configurator</title>
+    <style type='text/css'>
+        html, body {
+            padding:0px;
+            margin:0px;
+            background: #efefef;
+            font-family:Helvetica;
+        }
+
+        h2 {
+            color: #1e7800;
+            padding:0px;
+            margin:0px;
+            margin-bottom:10px;
+        }
+
+        select {
+            background: white;
+            width:100%;
+            font-size:1em;
+        }
+
+        .spaced {
+            margin-top:5px;
+            margin-bottom:5px;
+        }
+
+        .modal {
+            width:400px;
+            margin-left:auto;
+            margin-right:auto;
+            background:white;
+            padding:30px;
+            margin-top:20px;
+            border-radius:20px;
+        }
+    </style>
+
+    <script type='application/javascript'>
+
+        function createId()
+        {
+            var text = '';
+            var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            for( var i=0; i < 5; i++ )
+                text += characters.charAt(Math.floor(Math.random() * characters.length));
+            document.getElementById('deviceName').value = 'FIND-'+text;
+        }
+
+        function post(url, params, callback){
+            var http = new XMLHttpRequest();
+            http.open('POST', url, true);
+            http.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+
+            http.onreadystatechange = function() {
+                if(http.readyState == 4 && http.status == 200) {
+                    alert(http.responseText);
+                    callback(http.responseText);
+                }
+            };
+            http.send(params);
+        }
+
+        function ssidConnect(){
+            var ssid = document.getElementById('ssidSelect').value;
+            var password = document.getElementById('wifiPassword').value;
+            var deviceName = document.getElementById('deviceName').value;
+            var errors = false;
+
+            if (ssid == '') {
+                alert('Please select an SSID');
+                errors = true;
+            }
+
+            if (password == '') {
+                var check = confirm('No password has been added, assuming this is an insecure network');
+                if (!check) {
+                    alert('Please add a password');
+                    errors = true;
+                }
+            }
+
+            if (ssid == '') {
+                alert('Please select an SSID');
+                errors = true;
+            }
+
+            if (!errors) {
+                post('/connect', 'ssid='+ssid+'&password='+password+'&device='+deviceName, function (responseData) {
+                    var returnedObject = JSON.parse(responseData);
+                    if (returnedObject.error !== undefined) {
+                        alert(returnedObject.error);
+                    } else if(returnedObject.success !== undefined) {
+                        alert('AP should be disabled now, also new IP will be' + returnedObject.ip);
+                    }
+                });
+            }
+        }
+    </script>
+</head>
+<body onload='createId();'>
+    <div class='modal'>
+        <div class='stage-1'>
+            <h2>Step 1</h2>
+            Select your home wifi
+            <select id='ssidSelect'>
+                ----- WIFI HERE -----
+            </select>
+            <table>
+                <tr>
+                    <td>Password</td>
+                    <td><input type='password' id='wifiPassword' /></td>
+                </tr>
+                <tr>
+                    <td>Device Name</td>
+                    <td><input type='text' id='deviceName' /></td>
+                </tr>
+
+                <tr>
+                    <td><input type='button' value='Submit' onclick='ssidConnect();' /></td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</body>
+</html>
